@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CHOLO SPACE - Commander Edition</title>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #000 url('https://images.unsplash.com/photo-1462331940025-496dfbfc7564') center/cover fixed; color: white; margin: 0; min-height: 100vh; }
+    header { background: rgba(0,0,0,0.9); padding: 20px; text-align: center; box-shadow: 0 0 30px cyan; position: sticky; top: 0; z-index: 100; }
+    header h1 { margin: 0; font-size: 2.5em; letter-spacing: 2px; color: cyan; text-shadow: 0 0 15px cyan; }
+    .tagline { color: white; font-size: 1.1em; font-style: italic; opacity: 0.8; margin-top: 5px; display: block; }
+    
+    .mission-clock-container { display: flex; justify-content: center; gap: 30px; margin-top: 15px; padding: 10px; background: rgba(0, 255, 255, 0.05); border-radius: 8px; }
+    .clock-box { text-align: center; }
+    .clock-label { font-size: 0.7em; color: cyan; text-transform: uppercase; letter-spacing: 1px; }
+    .clock-time { font-family: 'Courier New', Courier, monospace; font-size: 1.4em; color: #fff; text-shadow: 0 0 10px cyan, 0 0 20px cyan; }
+
+    #broadcast-bar { background: #d32f2f; color: white; padding: 8px; font-weight: bold; text-align: center; box-shadow: 0 2px 10px rgba(211, 47, 47, 0.5); border-bottom: 1px solid white; overflow: hidden; }
+    .status-bar { background: rgba(0, 0, 0, 0.8); padding: 10px; font-size: 0.9em; text-align: center; border-bottom: 1px solid rgba(0,255,255,0.3); display: none; }
+    .pulse { height: 10px; width: 10px; border-radius: 50%; display: inline-block; margin-right: 8px; animation: blink 1.5s infinite; }
+    .status-green { background-color: #0f0; box-shadow: 0 0 10px #0f0; }
+    @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+    
+    nav { margin-top: 15px; }
+    nav a { color: cyan; margin: 0 15px; text-decoration: none; font-size: 1.1em; cursor: pointer; transition: 0.3s; }
+    nav a:hover { text-shadow: 0 0 15px cyan; }
+    #logout-btn { background: #d32f2f; padding: 5px 15px; border-radius: 5px; cursor: pointer; margin-left: 20px; }
+    
+    .page { display: none; padding: 20px; animation: fadeIn 0.8s; }
+    .active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    
+    .card { background: rgba(0,0,0,0.8); padding: 25px; border-radius: 15px; margin: 20px auto; max-width: 1000px; border: 1px solid rgba(0,255,255,0.2); }
+    img, iframe { width: 100%; border-radius: 10px; margin: 15px 0; border: 1px solid cyan; }
+    
+    .badge-container { display: flex; gap: 10px; margin-top: 10px; }
+    .badge { padding: 5px 12px; border-radius: 20px; font-size: 0.75em; font-weight: bold; text-transform: uppercase; border: 1px solid #444; color: #444; transition: 0.5s; }
+    .badge-unlocked { border-color: gold !important; color: gold !important; box-shadow: 0 0 10px gold; text-shadow: 0 0 5px gold; background: rgba(255, 215, 0, 0.1); }
+
+    .gallery-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; }
+    .gallery-grid img { height: 200px; object-fit: cover; transition: 0.3s; cursor: zoom-in; }
+    .gallery-grid img:hover { transform: scale(1.03); border-color: white; }
+
+    #login-section { text-align: center; padding: 100px 20px; }
+    input, textarea { padding: 12px; margin: 10px; border-radius: 5px; border: none; width: 250px; background: #222; color: white; }
+    button { background: cyan; color: black; padding: 12px 30px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    button:hover { transform: scale(1.05); box-shadow: 0 0 15px cyan; }
+    
+    .dashboard-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    .dashboard-table th, .dashboard-table td { padding: 12px; text-align: left; border-bottom: 1px solid rgba(0,255,255,0.1); }
+    .dashboard-table th { color: cyan; font-size: 0.8em; }
+    .del-btn { color: #ff5252; cursor: pointer; font-size: 0.7em; border: 1px solid #ff5252; padding: 2px 5px; border-radius: 3px; }
+
+    .log-entry { background: rgba(0, 255, 255, 0.05); border-left: 4px solid cyan; padding: 15px; margin: 10px 0; border-radius: 0 10px 10px 0; position: relative; }
+    .log-entry small { color: cyan; font-family: monospace; }
+    .share-btn { position: absolute; right: 10px; top: 10px; font-size: 0.7em; background: cyan; color: black; padding: 3px 8px; border-radius: 3px; cursor: pointer; }
+
+    #zoom-modal { display: none; position: fixed; z-index: 1000; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); cursor: zoom-out; justify-content: center; align-items: center; }
+    #zoom-modal img { max-width: 90%; max-height: 90%; border: 2px solid cyan; box-shadow: 0 0 30px cyan; }
+    #notification { position: fixed; bottom: 20px; right: 20px; background: cyan; color: black; padding: 15px 25px; border-radius: 10px; font-weight: bold; display: none; z-index: 1000; box-shadow: 0 0 20px cyan; }
+  </style>
+</head>
+<body>
+
+  <div id="broadcast-bar" style="display: none;">
+    <marquee id="alert-text">📡 SCANNING FOR SUPREME COMMANDER BROADCAST...</marquee>
+  </div>
+
+  <div id="zoom-modal" onclick="this.style.display='none'">
+    <img id="zoomed-img" src="">
+  </div>
+
+  <div id="notification">SYSTEM UPDATED</div>
+
+  <div id="status-display" class="status-bar">
+    <span id="status-light" class="pulse status-green"></span> 
+    <span id="status-text">MISSION STATUS: ACTIVE</span>
+  </div>
+
+  <header>
+    <h1>🚀 CHOLO SPACE</h1>
+    <span class="tagline">Taile Let's Go</span>
+    
+    <div id="mission-clock-display" class="mission-clock-container" style="display:none;">
+      <div class="clock-box">
+        <div class="clock-label">Local Command</div>
+        <div id="local-clock" class="clock-time">00:00:00</div>
+      </div>
+      <div class="clock-box">
+        <div class="clock-label">Space Time (UTC)</div>
+        <div id="utc-clock" class="clock-time">00:00:00</div>
+      </div>
+    </div>
+
+    <nav id="nav" style="display:none;">
+      <a onclick="showPage('home')">Home</a>
+      <a onclick="showPage('gallery')">Gallery</a>
+      <a onclick="showPage('public-feed')">Mission Control</a>
+      <a id="admin-link" onclick="showPage('admin-panel')" style="display:none; color: yellow; border: 1px solid yellow; padding: 2px 5px; border-radius: 4px;">Command Center</a>
+      <a onclick="showPage('mars')">Mars</a>
+      <a onclick="showPage('iss')">ISS Live</a>
+      <a onclick="loadLogs()">Mission Log</a>
+      <a onclick="showPage('about')">About</a>
+      <span id="logout-btn" onclick="logout()">Logout</span>
+    </nav>
+  </header>
+
+  <div id="login-section">
+    <div class="card" style="max-width: 400px; text-align:center;">
+      <h2>Mission Briefing</h2>
+      <input id="username" placeholder="Username" /><br>
+      <input id="email" type="email" placeholder="Email (Optional)" /><br> <input id="password" type="password" placeholder="Password" /><br>
+      <button onclick="login()">Login</button>
+      <button onclick="register()" style="background: transparent; color: cyan; border: 1px solid cyan; margin-left: 10px;">Register</button>
+    </div>
+  </div>
+
+  <div id="home" class="page">
+    <div class="card" style="border: 2px solid cyan;">
+      <div style="display: flex; align-items: center; gap: 25px;">
+        <div style="position: relative;">
+          <img id="user-avatar" src="https://cdn-icons-png.flaticon.com/512/1047/1047711.png" style="width: 120px; height: 120px; border-radius: 50%; border: 3px solid cyan; object-fit: cover;">
+          <input type="file" id="avatar-input" style="display: none;" onchange="uploadAvatar()">
+          <button onclick="document.getElementById('avatar-input').click()" style="padding: 4px 8px; font-size: 10px; position: absolute; bottom: 0; right: 0; width: auto;">UPLOAD</button>
+        </div>
+        <div>
+          <h2 id="user-greeting" style="margin: 0; color: #ffeb3b;">Welcome!</h2>
+          <p id="user-rank" style="color: cyan; font-weight: bold; margin: 5px 0;">Rank: Analyzing...</p>
+          <div class="badge-container">
+             <span id="badge-1" class="badge">First Entry</span>
+             <span id="badge-2" class="badge">Explorer</span>
+             <span id="badge-3" class="badge">Veteran</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="admin-broadcast-tool" style="display:none; margin-top: 20px; border-top: 1px dashed red; padding-top: 15px;">
+        <h4 style="color: #ff5252; margin: 0 0 10px 0;">📡 SUPREME COMMANDER BROADCAST</h4>
+        <input id="broadcast-input" placeholder="Type global alert message..." style="width: 70%; background: #330000; border: 1px solid red;">
+        <button onclick="sendBroadcast()" style="background: #d32f2f; color: white;">SEND ALERT</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>📜 Recent Mission Records</h3>
+      <table class="dashboard-table">
+        <thead>
+          <tr><th>Timestamp</th><th>Observation</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="dashboard-log-body"></tbody>
+      </table>
+    </div>
+    
+    <div class="card">
+        <h2>🔭 NASA Daily Discovery</h2>
+        <div id="apod-container">
+          <img id="apod-img" src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800" style="cursor: zoom-in;" onclick="zoomImage(this.src)">
+          <p id="apod-loading">Establishing secure uplink...</p>
+          <p id="apod-desc" style="font-size: 0.9em; line-height: 1.6; opacity: 0.9;">Awaiting deep space imagery. Standby for telemetry update.</p>
+        </div>
+    </div>
+  </div>
+
+  <div id="admin-panel" class="page">
+    <div class="card" style="border: 2px solid yellow;">
+        <h2 style="color: yellow;">🛰️ COMMAND CENTER (Good View)</h2>
+        <p>Active Pilots Registered: <span id="total-users" style="color: cyan; font-weight: bold;">0</span></p>
+        
+        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px;">
+            <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; border: 1px solid #444;">
+                <h4 style="border-bottom: 1px solid yellow; padding-bottom: 5px;">👥 Pilot Roster</h4>
+                <div id="master-user-list" style="font-family: monospace; font-size: 0.9em;"></div>
+            </div>
+            
+            <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; border: 1px solid #444;">
+                <h4 style="border-bottom: 1px solid yellow; padding-bottom: 5px;">📑 All Pilot Logs (Private & Public)</h4>
+                <div id="master-log-feed" style="max-height: 500px; overflow-y: auto;"></div>
+            </div>
+        </div>
+        <button onclick="loadMasterData()" style="margin-top: 15px; background: yellow; color: black;">FORCE REFRESH</button>
+    </div>
+  </div>
+
+  <div id="gallery" class="page">
+    <div class="card">
+      <h2>🖼️ Space Gallery</h2>
+      <div class="gallery-grid">
+        <img src="https://images.unsplash.com/photo-1614730321146-b6fa6a46bcb4?w=800" alt="Earth" onclick="zoomImage(this.src)">
+        <img src="https://images.unsplash.com/photo-1464802686167-b939a6910659?w=600" alt="Galaxy" onclick="zoomImage(this.src)">
+        <img src="https://images.unsplash.com/photo-1502134249126-9f3755a50d78?w=600" alt="Nebula" onclick="zoomImage(this.src)">
+        <img src="https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=600" alt="Space Station" onclick="zoomImage(this.src)">
+      </div>
+    </div>
+  </div>
+
+  <div id="public-feed" class="page">
+    <div class="card">
+      <h2>📡 Mission Control (Public Logs)</h2>
+      <div id="public-log-container">
+          <p style="text-align:center; padding: 20px; color: #888;">📡 SCANNING FOR COMMANDER BROADCASTS...</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="mars" class="page">
+    <div class="card">
+      <h2 style="color: #ff5722;">🔴 Mars Mission Control</h2>
+      <p>Current Mission: <strong>Perseverance Rover</strong></p>
+      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/NASA_Mars_Rover.jpg/1200px-NASA_Mars_Rover.jpg" alt="Mars Surface">
+    </div>
+  </div>
+
+  <div id="iss" class="page">
+    <div class="card">
+      <h2>🛰️ ISS Live Tracker</h2>
+      <iframe src="https://www.satflare.com/track.asp?q=25544" height="500" style="background: white;"></iframe>
+    </div>
+  </div>
+
+  <div id="logs" class="page">
+    <div class="card">
+      <h2>📝 Mission Journal</h2>
+      <textarea id="log-input" placeholder="Type observation and press Enter..." style="width: 95%; height: 80px;"></textarea><br>
+      <button onclick="saveLog()">Record Observation</button>
+      <hr style="border: 0.5px solid rgba(0,255,255,0.2); margin: 20px 0;">
+      <div id="log-container"></div>
+    </div>
+  </div>
+
+  <div id="about" class="page">
+    <div class="card">
+      <h2>👨‍🚀 About the Mission</h2>
+      <p>CHOLO SPACE: Exploring the final frontier.</p>
+      <div style="font-size: 1.5em; text-align: center; padding: 20px;">
+        $$F = G \frac{m_1 m_2}{r^2}$$
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentUser = "";
+    let currentUserRole = "pilot"; 
+
+    function notify(msg) {
+      const toast = document.getElementById('notification');
+      toast.innerText = msg;
+      toast.style.display = 'block';
+      setTimeout(() => toast.style.display = 'none', 3000);
+    }
+
+    function zoomImage(src) {
+      document.getElementById('zoomed-img').src = src;
+      document.getElementById('zoom-modal').style.display = 'flex';
+    }
+
+    async function fetchNASA_APOD() {
+      try {
+        const res = await fetch('/api/nasa-discovery'); 
+        const data = await res.json();
+        if(data.url) {
+          document.getElementById('apod-img').src = data.url;
+          document.getElementById('apod-loading').innerText = "Live satellite feed updated.";
+          document.getElementById('apod-desc').innerText = data.explanation.substring(0, 300) + "...";
+        } else { throw new Error("Invalid Data"); }
+      } catch (e) {
+        document.getElementById('apod-loading').innerText = "Using archived satellite data (Secure Backup).";
+        document.getElementById('apod-img').src = "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800";
+      }
+    }
+
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('local-clock').innerText = now.toLocaleTimeString();
+      document.getElementById('utc-clock').innerText = now.toUTCString().split(' ')[4];
+    }
+    setInterval(updateClock, 1000);
+
+    function showPage(pageId) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(pageId).classList.add('active');
+      if(pageId === 'public-feed') loadPublicLogs();
+      if(pageId === 'admin-panel') loadMasterData();
+    }
+
+    async function login() {
+      const u = document.getElementById('username').value;
+      const p = document.getElementById('password').value;
+      const res = await fetch('/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: u, password: p }) });
+      if (res.ok) {
+        const data = await res.json();
+        localStorage.setItem('token', data.token);
+        initDashboard();
+        notify("ACCESS GRANTED");
+      } else { alert('Login failed'); }
+    }
+
+    // UPDATED REGISTER TO INCLUDE EMAIL
+    async function register() {
+      const u = document.getElementById('username').value;
+      const e = document.getElementById('email').value; // Added
+      const p = document.getElementById('password').value;
+      const res = await fetch('/register', { 
+          method: 'POST', 
+          headers: { 'Content-Type': 'application/json' }, 
+          body: JSON.stringify({ username: u, email: e, password: p }) // Added email
+      });
+      const msg = await res.text();
+      notify(msg.toUpperCase());
+    }
+
+    async function loadMasterData() {
+        if(currentUserRole !== 'admin') return;
+        try {
+            const res = await fetch('/admin/master-feed');
+            const data = await res.json();
+            document.getElementById('total-users').innerText = data.users.length;
+            document.getElementById('master-user-list').innerHTML = data.users.map(u => 
+                `<div style="margin-bottom:8px; border-bottom:1px solid #333;">
+                    <span style="color:yellow;">➤</span> ${u.username} <small style="color:#888;">[${u.role}]</small>
+                </div>`
+            ).join('');
+
+            document.getElementById('master-log-feed').innerHTML = data.logs.map(l => `
+                <div style="padding: 10px; border-bottom: 1px solid #444; margin-bottom:5px; background: rgba(0,0,0,0.3);">
+                    <strong style="color:cyan;">${l.username}</strong> 
+                    <small style="color:#666; float:right;">${new Date(l.date).toLocaleString()}</small>
+                    <p style="margin:5px 0 0 0; color:#ddd;">${l.message}</p>
+                </div>
+            `).join('');
+        } catch(e) { console.error("Master Feed Link Broken"); }
+    }
+
+    async function refreshUserData() {
+      const res = await fetch(`/get-data/${currentUser}`);
+      const data = await res.json();
+      document.getElementById('user-avatar').src = data.avatar;
+      const logCount = data.logs.length;
+      
+      let rank = data.role === 'admin' ? "Supreme Commander" : (logCount >= 10 ? "Senior Commander" : (logCount >= 5 ? "Flight Pilot" : "Junior Cadet"));
+      document.getElementById('user-rank').innerText = `Rank: ${rank} (${logCount} Logs)`;
+
+      const tableBody = document.getElementById('dashboard-log-body');
+      tableBody.innerHTML = data.logs.slice(0, 5).map(l => `
+        <tr>
+          <td style="color:#888; font-size:0.8em;">${new Date(l.date).toLocaleTimeString()}</td>
+          <td>${l.message}</td>
+          <td><span class="del-btn" onclick="deleteLog('${l._id}')">DELETE</span></td>
+        </tr>
+      `).join('');
+
+      if(logCount > 0) document.getElementById('badge-1').classList.add('badge-unlocked');
+      if(data.avatar.includes('/uploads/')) document.getElementById('badge-2').classList.add('badge-unlocked');
+      if(logCount >= 5) document.getElementById('badge-3').classList.add('badge-unlocked');
+      return data.logs;
+    }
+
+    async function deleteLog(id) {
+        if(!confirm("Erase this record?")) return;
+        const res = await fetch(`/delete-log/${id}`, { method: 'DELETE' });
+        if(res.ok) {
+            notify("LOG ERASED");
+            refreshUserData();
+            if(document.getElementById('public-feed').classList.contains('active')) loadPublicLogs();
+            if(document.getElementById('admin-panel').classList.contains('active')) loadMasterData();
+        }
+    }
+
+    async function shareToMissionControl(id) {
+        await fetch(`/share-log/${id}`, { method: 'POST' });
+        notify("SHARED WITH MISSION CONTROL");
+    }
+
+    async function loadPublicLogs() {
+        const res = await fetch('/public-logs');
+        const logs = await res.json();
+        const container = document.getElementById('public-log-container');
+        if(logs.length === 0) {
+            container.innerHTML = `<p style="text-align:center; padding: 20px; color: #888;">📡 SCANNING...</p>`;
+            return;
+        }
+        container.innerHTML = logs.map(l => {
+            const adminDel = currentUserRole === 'admin' ? `<span class="del-btn" style="float:right;" onclick="deleteLog('${l._id}')">ADMIN REMOVE</span>` : '';
+            return `
+              <div class="log-entry" style="border-left-color: gold;">
+                  ${adminDel}
+                  <strong style="color: gold;">Commander ${l.username}</strong> <small>• ${new Date(l.date).toLocaleString()}</small>
+                  <p>${l.message}</p>
+              </div>
+            `;
+        }).join('');
+    }
+
+    async function sendBroadcast() {
+        const msg = document.getElementById('broadcast-input').value;
+        if(!msg) return;
+        await fetch('/admin/broadcast', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: currentUser, message: msg })
+        });
+        document.getElementById('broadcast-input').value = "";
+        notify("GLOBAL ALERT SENT");
+        updateAlertBar();
+    }
+
+    async function updateAlertBar() {
+        try {
+            const res = await fetch('/api/alert');
+            const data = await res.json();
+            document.getElementById('alert-text').innerText = data.message;
+        } catch(e) {}
+    }
+    setInterval(updateAlertBar, 5000);
+
+    async function uploadAvatar() {
+      const fileInput = document.getElementById('avatar-input');
+      const formData = new FormData();
+      formData.append('avatar', fileInput.files[0]);
+      formData.append('username', currentUser);
+      const res = await fetch('/upload-avatar', { method: 'POST', body: formData });
+      const data = await res.json();
+      document.getElementById('user-avatar').src = data.path;
+      notify("AVATAR UPDATED");
+      refreshUserData();
+    }
+
+    async function saveLog() {
+      const msg = document.getElementById('log-input').value;
+      if(!msg) return;
+      await fetch('/save-log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: currentUser, message: msg })
+      });
+      document.getElementById('log-input').value = "";
+      notify("LOG RECORDED");
+      loadLogs();
+      refreshUserData();
+    }
+
+    async function loadLogs() {
+      showPage('logs');
+      const logs = await refreshUserData();
+      const container = document.getElementById('log-container');
+      container.innerHTML = logs.map(l => `
+        <div class="log-entry">
+          <small>${new Date(l.date).toLocaleString()}</small>
+          <div class="share-btn" onclick="shareToMissionControl('${l._id}')">SHARE</div>
+          <p>${l.message}</p>
+        </div>
+      `).join('');
+    }
+
+    function initDashboard() {
+      const token = localStorage.getItem('token');
+      if (token) {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        currentUser = payload.username;
+        currentUserRole = payload.role; 
+
+        document.getElementById('user-greeting').innerText = `Welcome, Commander ${currentUser}! 🚀`;
+        document.getElementById('login-section').style.display = 'none';
+        document.getElementById('nav').style.display = 'block';
+        document.getElementById('status-display').style.display = 'block';
+        document.getElementById('broadcast-bar').style.display = 'block';
+        document.getElementById('mission-clock-display').style.display = 'flex';
+        
+        if(currentUserRole === 'admin') {
+            document.getElementById('admin-broadcast-tool').style.display = 'block';
+            document.getElementById('admin-link').style.display = 'inline-block';
+            setInterval(loadMasterData, 10000); 
+        }
+
+        showPage('home');
+        refreshUserData();
+        fetchNASA_APOD();
+        updateAlertBar();
+      }
+    }
+
+    function logout() { localStorage.removeItem('token'); location.reload(); }
+    if (localStorage.getItem('token')) initDashboard();
+  </script>
+</body>
+</html>
