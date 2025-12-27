@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcryptjs');
@@ -26,7 +27,8 @@ if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-mongoose.connect('mongodb+srv://JunaidRafi:mysecretpassword123@cluster0.kflbgan.mongodb.net/spacedb?retryWrites=true&w=majority')
+// UPDATED LINE: Using process.env to hide your password
+mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('🚀 Secure DB Connected'))
   .catch(err => console.log('❌ DB Error:', err));
 
